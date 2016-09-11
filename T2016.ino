@@ -8,8 +8,6 @@ const byte lcdBacklight = 11;
 
 const byte tombol = A0;
 
-
-
 const byte BTN_SET  = 1;
 const byte BTN_UP   = 2;
 const byte BTN_DOWN = 3;
@@ -127,25 +125,36 @@ String hari[7] = {
 
 const byte MENU_UTAMA = 1;
 const byte MENU_LIST_MODE = 2;
-const byte MENU_LIST_HARI = 3;
-const byte MENU_LIST_TIMER = 4;
-const byte MENU_REFERENSI_HARI = 5;
-const byte MENU_TIMER = 6;
+const byte MENU_LIST_DISPLAY = 3;
+const byte MENU_LIST_HARI = 4;
+const byte MENU_LIST_TIMER = 5;
+const byte MENU_REFERENSI_HARI = 6;
+const byte MENU_TIMER = 7;
 
 const byte TETAP = 1;
 const byte NAIK = 2;
 const byte TURUN = 3;
 
-String menu_utama[3] = {
-  "1.Set :",
+const byte menu_utama_size = 3;
+String menu_utama[menu_utama_size] = {
+  "1.Set",
   "2.Pilih Hari",
   "3.Display"
 };
 
-String menu_list_mode[4] = {
-  "1. Umum",
-  "2. Islami",
-  "3. Harian",
+const byte menu_list_mode_size = 4;
+String menu_list_mode[menu_list_mode_size] = {
+  "1.Umum",
+  "2.Islami",
+  "3.Harian",
+  kembali
+};
+
+const byte menu_list_display_size = 4;
+String menu_list_display[]{
+  "1.Off",
+  "2.On",
+  "3.Auto",
   kembali
 };
 
@@ -212,6 +221,7 @@ const byte ADDR_LCD_BACKLIGHT = 1;
 const byte DTIMER_MODE_UMUM = 0;
 const byte DTIMER_MODE_ISLAMI = 1;
 const byte DTIMER_MODE_HARIAN = 2;
+
 const byte DLCD_BACKLIGHT_OFF = 0;
 const byte DLCD_BACKLIGHT_ON = 1;
 const byte DLCD_BACKLIGHT_AUTO = 2;
@@ -225,7 +235,6 @@ void setup() {
 
     // timer option (system option)
     get_timer_option();
-    DLCD_BACKLIGHT = DLCD_BACKLIGHT_ON;
     switch(DLCD_BACKLIGHT){
       case DLCD_BACKLIGHT_OFF:
         digitalWrite(lcdBacklight, LOW);
@@ -366,6 +375,16 @@ void proses_menu(){
                 // level naik, item reset
                 menu_listener(TETAP, TETAP);
                 break;
+
+              case 3:
+                menu_level = MENU_LIST_DISPLAY;
+                menu_item_max = 4;
+                MENU_KEMBALI = 4;
+                menu_item = 1;
+                // level naik, item reset
+                menu_listener(TETAP, TETAP);
+                break;
+                
             }
             
             break;
@@ -373,20 +392,54 @@ void proses_menu(){
         case MENU_LIST_MODE:
             switch(menu_item){
               case 1:
+                EEPROM.write(ADDR_TIMER_MODE, DTIMER_MODE_UMUM);
+                DTIMER_MODE = DTIMER_MODE_UMUM;
+                load_menu(MENU_UTAMA, menu_utama_size, 1);
                 break;
 
               case 2:
+                EEPROM.write(ADDR_TIMER_MODE, DTIMER_MODE_ISLAMI);
+                DTIMER_MODE = DTIMER_MODE_ISLAMI;
+                load_menu(MENU_UTAMA, menu_utama_size, 1);
                 break;
 
               case 3:
+                EEPROM.write(ADDR_TIMER_MODE, DTIMER_MODE_HARIAN);
+                DTIMER_MODE = DTIMER_MODE_HARIAN;
+                load_menu(MENU_UTAMA, menu_utama_size, 1);
                 break;
 
               case 4:
-                menu_level = MENU_UTAMA;
-                menu_item_max = 2;
-                menu_item = 1;
-                // level naik, item reset
-                menu_listener(TETAP, TETAP);
+                load_menu(MENU_UTAMA, menu_utama_size, 1);
+                break;
+            }
+            break;
+
+        case MENU_LIST_DISPLAY:
+            switch(menu_item){
+              case 1:
+                EEPROM.write(ADDR_LCD_BACKLIGHT, DLCD_BACKLIGHT_OFF);
+                DLCD_BACKLIGHT = DLCD_BACKLIGHT_OFF;
+                digitalWrite(lcdBacklight, LOW);
+                load_menu(MENU_UTAMA, menu_utama_size, 3);
+                break;
+
+              case 2:
+                EEPROM.write(ADDR_LCD_BACKLIGHT, DLCD_BACKLIGHT_ON);
+                DLCD_BACKLIGHT = DLCD_BACKLIGHT_ON;
+                digitalWrite(lcdBacklight, HIGH);
+                load_menu(MENU_UTAMA, menu_utama_size, 3);
+                break;
+
+              case 3:
+                EEPROM.write(ADDR_LCD_BACKLIGHT, DLCD_BACKLIGHT_AUTO);
+                DLCD_BACKLIGHT = DLCD_BACKLIGHT_AUTO;
+                digitalWrite(lcdBacklight, HIGH);
+                load_menu(MENU_UTAMA, menu_utama_size, 3);
+                break;
+
+              case 4:
+                load_menu(MENU_UTAMA, menu_utama_size, 3);
                 break;
             }
             break;
@@ -395,7 +448,7 @@ void proses_menu(){
             if(menu_item == MENU_KEMBALI){
               menu_level = MENU_UTAMA;
               menu_item_max = 2;
-              menu_item = 2;
+              menu_item = menu_utama_size;
               // level naik, item reset
               menu_listener(TETAP, TETAP);
               
@@ -478,10 +531,32 @@ void menu_listener(byte level, byte item){
 
             if(menu_item <=2){
               m1 = menu_utama[0];
+              switch(DTIMER_MODE){
+                case DTIMER_MODE_UMUM:
+                  m1.concat(" [Umum]");
+                  break;
+                case DTIMER_MODE_ISLAMI:
+                  m1.concat(" [Islami]");
+                  break;
+                case DTIMER_MODE_HARIAN:
+                  m1.concat(" [Harian]");
+                  break;
+              }
               m2 = menu_utama[1];
             }else{
               m1 = menu_utama[1];
               m2 = menu_utama[2];
+              switch(DLCD_BACKLIGHT){
+                case DLCD_BACKLIGHT_OFF:
+                  m2.concat(" [Off]");
+                  break;
+                case DLCD_BACKLIGHT_ON:
+                  m2.concat(" [On]");
+                  break;
+                case DLCD_BACKLIGHT_AUTO:
+                  m2.concat(" [Auto]");
+                  break;
+              }
             }
             
             set_display(m1, m2);
@@ -499,6 +574,22 @@ void menu_listener(byte level, byte item){
             }else{
               m1 = menu_list_mode[menu_item_max-2];
               m2 = menu_list_mode[menu_item_max-1];
+            }
+            set_display(m1, m2);
+            break;
+
+        case MENU_LIST_DISPLAY:
+            menu_item = hx_constrain(menu_item,1,menu_item_max, item);
+            
+            if(menu_item <= 2){
+              m1 = menu_list_display[0];
+              m2 = menu_list_display[1];
+            }else if(menu_item < menu_item_max){
+              m1 = menu_list_display[menu_item-2];
+              m2 = menu_list_display[menu_item-1];
+            }else{
+              m1 = menu_list_display[menu_item_max-2];
+              m2 = menu_list_display[menu_item_max-1];
             }
             set_display(m1, m2);
             break;
@@ -584,8 +675,15 @@ void menu_timeout(){
     if(menu_timeout_now - menu_timeout_last >= menu_timeout_limit){
         setting_mode = false;
         btn_bef = 0;
-        //is_default_display = true;
     }
+}
+
+void load_menu(byte LV, byte LV_MAX, byte LV_ITEM){
+    menu_level = LV;
+    menu_item_max = LV_MAX;
+    menu_item = LV_ITEM;
+    // level naik, item reset
+    menu_listener(TETAP, TETAP);
 }
 
 void set_display(String m1, String m2){
