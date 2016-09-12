@@ -229,6 +229,15 @@ const byte DLCD_BACKLIGHT_AUTO = 2;
 byte DTIMER_MODE = DTIMER_MODE_UMUM;
 byte DLCD_BACKLIGHT = DLCD_BACKLIGHT_ON;
 
+
+/*
+ * backlight display timeout
+ */
+boolean lcd_bl_on = false;
+unsigned long lcd_bl_timeout_now = 0;
+unsigned long lcd_bl_timeout_last = 0;
+unsigned long lcd_bl_timeout_limit = 5000L;
+
 void setup() {
     pinMode(tombol, INPUT);
     pinMode(lcdBacklight, OUTPUT);
@@ -237,10 +246,10 @@ void setup() {
     get_timer_option();
     switch(DLCD_BACKLIGHT){
       case DLCD_BACKLIGHT_OFF:
-        digitalWrite(lcdBacklight, LOW);
+        set_lcd_bl(false);
         break;
       case DLCD_BACKLIGHT_ON:
-        digitalWrite(lcdBacklight, HIGH);
+        set_lcd_bl(true);
         break;
     }
     
@@ -279,6 +288,9 @@ void loop() {
     }else{
         menu_timeout();
     }
+    if(DLCD_BACKLIGHT == DLCD_BACKLIGHT_AUTO){
+        lcd_bl_timeout();
+    }
 }
 
 void btn_listener() {
@@ -313,6 +325,10 @@ void btn_listener() {
                       menu_item_max = 3; // jumlah menu
                       setting_mode = true;
                       is_default_display = false;
+
+                      if(!lcd_bl_on){
+                        set_lcd_bl(true);
+                      }
                     }
             
                     // level tetap, item up;
@@ -347,6 +363,7 @@ void btn_listener() {
             }
             btn_delay_last = btn_delay_now;
             menu_timeout_last = btn_delay_now;
+            lcd_bl_timeout_last = btn_delay_now;
         }
         btn_bef = btn;
         
@@ -420,21 +437,21 @@ void proses_menu(){
               case 1:
                 EEPROM.write(ADDR_LCD_BACKLIGHT, DLCD_BACKLIGHT_OFF);
                 DLCD_BACKLIGHT = DLCD_BACKLIGHT_OFF;
-                digitalWrite(lcdBacklight, LOW);
+                set_lcd_bl(false);
                 load_menu(MENU_UTAMA, menu_utama_size, 3);
                 break;
 
               case 2:
                 EEPROM.write(ADDR_LCD_BACKLIGHT, DLCD_BACKLIGHT_ON);
                 DLCD_BACKLIGHT = DLCD_BACKLIGHT_ON;
-                digitalWrite(lcdBacklight, HIGH);
+                set_lcd_bl(true);
                 load_menu(MENU_UTAMA, menu_utama_size, 3);
                 break;
 
               case 3:
                 EEPROM.write(ADDR_LCD_BACKLIGHT, DLCD_BACKLIGHT_AUTO);
                 DLCD_BACKLIGHT = DLCD_BACKLIGHT_AUTO;
-                digitalWrite(lcdBacklight, HIGH);
+                set_lcd_bl(true);
                 load_menu(MENU_UTAMA, menu_utama_size, 3);
                 break;
 
@@ -446,11 +463,7 @@ void proses_menu(){
             
         case MENU_LIST_HARI:
             if(menu_item == MENU_KEMBALI){
-              menu_level = MENU_UTAMA;
-              menu_item_max = 2;
-              menu_item = menu_utama_size;
-              // level naik, item reset
-              menu_listener(TETAP, TETAP);
+              load_menu(MENU_UTAMA, menu_utama_size, 2);
               
             }else{
               // record hari yang terpilih
@@ -554,7 +567,7 @@ void menu_listener(byte level, byte item){
                   m2.concat(" [On]");
                   break;
                 case DLCD_BACKLIGHT_AUTO:
-                  m2.concat(" [Auto]");
+                  m2.concat(" [A]");
                   break;
               }
             }
@@ -675,6 +688,23 @@ void menu_timeout(){
     if(menu_timeout_now - menu_timeout_last >= menu_timeout_limit){
         setting_mode = false;
         btn_bef = 0;
+    }
+}
+
+void set_lcd_bl(boolean stat){
+    digitalWrite(lcdBacklight, stat);
+    lcd_bl_on = stat;
+}
+
+/*
+ * Jika Backlight dibuat auto
+ */
+void lcd_bl_timeout(){
+    lcd_bl_timeout_now = millis();
+    if(lcd_bl_timeout_now - lcd_bl_timeout_last >= lcd_bl_timeout_limit){
+        if(lcd_bl_on){
+            set_lcd_bl(false);
+        }
     }
 }
 
