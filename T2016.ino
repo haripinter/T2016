@@ -26,13 +26,13 @@ class XTimer{
   
   public:
     
-    boolean status_hari;
-    byte timer_status;
-    byte timer_jam;
-    byte timer_menit;
-    byte timer_L1;
-    byte timer_L2;
-    byte timer_L3;
+    boolean status_hari; // 0 (start_timer)
+    byte timer_status;   // start_timer + n_timer + 1
+    byte timer_jam;      // start_timer + n_timer + 2
+    byte timer_menit;    // start_timer + n_timer + 3
+    byte timer_L1;       // start_timer + n_timer + 4
+    byte timer_L2;       // start_timer + n_timer + 5
+    byte timer_L3;       // start_timer + n_timer + 6 
 
     byte hari;
     int start_ram;
@@ -51,9 +51,13 @@ class XTimer{
         Serial.println(start_ram);
     }
 
+    void set_status_hari(boolean stat){
+        status_hari = stat;
+        EEPROM.write(start_ram, status_hari);
+    }
+
     boolean get_status_hari(){
-        target_ram = start_ram;
-        if(EEPROM.read(target_ram) == 0){
+        if(EEPROM.read(start_ram) == 0){
           status_hari = false;
         }else{
           status_hari = true;
@@ -159,7 +163,9 @@ String menu_list_display[]{
 };
 
 String menu_list_hari[8] = {
-  hari[0], hari[1], hari[2], hari[3], hari[4], hari[5], hari[6], kembali
+  hari[0], hari[1], hari[2], hari[3], hari[4], hari[5], hari[6],
+  // HARI x
+  kembali
 };
 
 String menu_list_timer[3] = {
@@ -196,7 +202,7 @@ byte jumlah_timer = 5;
 byte jumlah_hari = 7;
 
 XTimer xt_satu = XTimer(0);
-XTimer xt_dua = XTimer(1);
+XTimer XTimer_Set = XTimer(0);
 
 String default_display = "Hello, Default!";
 boolean is_default_display = true;
@@ -210,8 +216,11 @@ unsigned long menu_timeout_limit = 5000L;
  * ROM ADDR DATA 
  * 0 - 99 untuk static
  * 100 - 1023 untuk timer harian
+ * 
  * 0 - mode [0:umum, 1:islami, 2:harian]
  * 1 - backlight LCD [0:off, 1:on, 2:auto]
+ * 
+ * 
  */
 
 const byte ADDR_TIMER_MODE = 0;
@@ -411,18 +420,21 @@ void proses_menu(){
               case 1:
                 EEPROM.write(ADDR_TIMER_MODE, DTIMER_MODE_UMUM);
                 DTIMER_MODE = DTIMER_MODE_UMUM;
+                sync_mode();
                 load_menu(MENU_UTAMA, menu_utama_size, 1);
                 break;
 
               case 2:
                 EEPROM.write(ADDR_TIMER_MODE, DTIMER_MODE_ISLAMI);
                 DTIMER_MODE = DTIMER_MODE_ISLAMI;
+                sync_mode();
                 load_menu(MENU_UTAMA, menu_utama_size, 1);
                 break;
 
               case 3:
                 EEPROM.write(ADDR_TIMER_MODE, DTIMER_MODE_HARIAN);
                 DTIMER_MODE = DTIMER_MODE_HARIAN;
+                sync_mode();
                 load_menu(MENU_UTAMA, menu_utama_size, 1);
                 break;
 
@@ -767,5 +779,38 @@ void get_timer_option(){
       DLCD_BACKLIGHT = DLCD_BACKLIGHT_ON;
       EEPROM.write(ADDR_LCD_BACKLIGHT,DLCD_BACKLIGHT);
     }
+}
+
+
+/*
+ * setting ram hari
+ */
+void sync_mode(){
+    switch(DTIMER_MODE){
+      case DTIMER_MODE_UMUM:
+        set_mode_hari(0, false); // minggu tidak aktif
+        for(byte tmx=1; tmx<7; tmx++){
+          set_mode_hari(tmx, true); // senin-sabtu aktif
+        }
+        break;
+        
+      case DTIMER_MODE_ISLAMI:
+        for(byte tmx=0; tmx<7; tmx++){
+          set_mode_hari(tmx, true); // minggu-sabtu aktif
+        }
+        set_mode_hari(5, false); // jumat tidak aktif
+        break;
+        
+      case DTIMER_MODE_HARIAN:
+        for(byte tmx=0; tmx<7; tmx++){
+          set_mode_hari(tmx, true); // aktifkan semua (nanti dipilih manual)
+        }
+        break;
+    }
+}
+
+void set_mode_hari(byte tHari, boolean data){
+    XTimer_Set = XTimer(tHari);
+    XTimer_Set.set_status_hari(data);
 }
 
