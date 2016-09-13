@@ -127,6 +127,12 @@ String hari[7] = {
   "Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"
 };
 
+boolean hari_aktif[7] = {
+  true,true,true,true,true,true,true
+};
+
+byte hari_aktif_tmp = 0;
+
 const byte MENU_UTAMA = 1;
 const byte MENU_LIST_MODE = 2;
 const byte MENU_LIST_DISPLAY = 3;
@@ -399,8 +405,9 @@ void proses_menu(){
 
               case 2:
                 menu_level = MENU_LIST_HARI;
-                menu_item_max = 8;
-                MENU_KEMBALI = 8;
+                // hari yang aktif + menu kembali
+                menu_item_max = count_hari_aktif() + 1;
+                MENU_KEMBALI = menu_item_max;
                 menu_item = 1;
                 // level naik, item reset
                 menu_listener(TETAP, TETAP);
@@ -446,6 +453,7 @@ void proses_menu(){
                 load_menu(MENU_UTAMA, menu_utama_size, 1);
                 break;
             }
+            check_hari();
             break;
 
         case MENU_LIST_DISPLAY:
@@ -496,7 +504,7 @@ void proses_menu(){
         case MENU_LIST_TIMER:
             if(menu_item == MENU_KEMBALI){
               menu_level = MENU_LIST_HARI;
-              menu_item_max = 8;
+              menu_item_max = count_hari_aktif()+1;
               menu_item = menu_item_list_hari_last;
               // level naik, item reset
               menu_listener(TETAP, TETAP);
@@ -627,14 +635,53 @@ void menu_listener(byte level, byte item){
             menu_item = hx_constrain(menu_item,1,menu_item_max, item);
 
             if(menu_item <= 2){
-              m1 = menu_list_hari[0];
-              m2 = menu_list_hari[1];
+                if(DTIMER_MODE == DTIMER_MODE_UMUM){
+                  m1 = hari[1];
+                  m2 = hari[2];
+                }else if(DTIMER_MODE == DTIMER_MODE_ISLAMI){
+                  m1 = hari[0];
+                  m2 = hari[1];
+                }else if(DTIMER_MODE == DTIMER_MODE_HARIAN){
+                  m1 = hari[0];
+                  m2 = hari[1];
+                }
+              
+              //m1 = menu_list_hari[0];
+              //m2 = menu_list_hari[1];
             }else if(menu_item < menu_item_max){
-              m1 = menu_list_hari[menu_item-2];
-              m2 = menu_list_hari[menu_item-1];
+                if(DTIMER_MODE == DTIMER_MODE_UMUM){
+                  m1 = hari[menu_item-1];
+                  m2 = hari[menu_item];
+                }else if(DTIMER_MODE == DTIMER_MODE_ISLAMI){
+                  if(menu_item <= 5){
+                    m1 = hari[menu_item-2];
+                    m2 = hari[menu_item-1];
+                  }else{
+                    m1 = hari[menu_item-2];
+                    m2 = hari[menu_item];
+                  }
+                }else if(DTIMER_MODE == DTIMER_MODE_HARIAN){
+                  m1 = hari[menu_item-2];
+                  m2 = hari[menu_item-1];
+                }
+
+              
+              //m1 = menu_list_hari[menu_item-2];
+              //m2 = menu_list_hari[menu_item-1];
             }else{
-              m1 = menu_list_hari[menu_item_max-2];
-              m2 = menu_list_hari[menu_item_max-1];
+                if(DTIMER_MODE == DTIMER_MODE_UMUM){
+                  m1 = hari[menu_item_max-1];
+                  m2 = kembali;
+                }else if(DTIMER_MODE == DTIMER_MODE_ISLAMI){
+                  m1 = hari[menu_item_max-1];
+                  m2 = kembali;
+                }else if(DTIMER_MODE == DTIMER_MODE_HARIAN){
+                  m1 = hari[menu_item_max-2];
+                  m2 = kembali;
+                }
+                
+              //m1 = menu_list_hari[menu_item_max-2];
+              //m2 = menu_list_hari[menu_item_max-1];
             }
             set_display(m1, m2);
             break;
@@ -816,5 +863,28 @@ void sync_mode(){
 void set_mode_hari(byte tHari, boolean data){
     XTimer_Set = XTimer(tHari);
     XTimer_Set.set_status_hari(data);
+}
+
+void check_hari(){
+    for(byte hx=0; hx<7; hx++){
+        XTimer_Set = XTimer(hx);
+        String msgc = "Status Hari ";
+        msgc.concat(hari[hx]);
+        msgc.concat("(");
+        msgc.concat(hx);
+        msgc.concat(") = ");
+        msgc.concat(XTimer_Set.get_status_hari());
+        Serial.println(msgc);
+    }
+}
+
+byte count_hari_aktif(){
+    if(DTIMER_MODE == DTIMER_MODE_UMUM){
+      return 6;
+    }else if(DTIMER_MODE == DTIMER_MODE_ISLAMI){
+      return 6;
+    }else if(DTIMER_MODE == DTIMER_MODE_HARIAN){
+      return 7;
+    }
 }
 
