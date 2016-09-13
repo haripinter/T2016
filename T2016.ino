@@ -91,6 +91,7 @@ class XTimer{
     }
 
     void load_timer_full(){
+        jumlah_timer_aktif = 0;
         for(byte it=0; it<20; it++){
             load_timer(it);
             // jumlah timer yang aktif
@@ -98,6 +99,8 @@ class XTimer{
               jumlah_timer_aktif++;
             }
         }
+        Serial.print("HARI : ");
+        Serial.println(hari);
     }
 
     // n_timer start dari 0-19
@@ -355,17 +358,22 @@ void setup() {
     }
 
     /*for(byte d=0; d<7; d++){
-        xt_satu = XTimer(d);
+        xt_satu.set_hari(d);
         xt_satu.load_timer(0);
+        Serial.print("Status : ");
+        Serial.println(xt_satu.timer_status[0]);
+        Serial.print("Jumlah : ");
+        Serial.println(xt_satu.jumlah_timer_aktif);
         delay(5000);
-        xt_satu.load_timer(1);
-        delay(5000);
+        //xt_satu.load_timer(1);
+        //delay(5000);
         xt_satu.load_timer(5);
+        Serial.print("Status : ");
+        Serial.println(xt_satu.timer_status[5]);
         delay(5000);
-        xt_satu.load_timer(19);
-        delay(60000L);
-
-        
+        //xt_satu.load_timer(19);
+        //delay(60000L);
+   
     }*/
 }
 
@@ -573,9 +581,15 @@ void proses_menu(){
               hariter.concat(")");
               Serial.println(hariter);
 
+              
+
               //XTimer_Set = XTimer(hari_terpilih);
               XTimer_Set.set_hari(hari_terpilih);
 
+              String jumtimer = "Jumlah timer : ";
+              jumtimer.concat(XTimer_Set.jumlah_timer_aktif);
+              Serial.println(jumtimer);
+                
               menu_level = MENU_LIST_TIMER;
               menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
               menu_item = 1;
