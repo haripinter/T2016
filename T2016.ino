@@ -260,6 +260,10 @@ void setup() {
       case DLCD_BACKLIGHT_ON:
         set_lcd_bl(true);
         break;
+      case DLCD_BACKLIGHT_AUTO:
+        set_lcd_bl(true);
+        menu_timeout_last = millis();
+        break;
     }
     
     
