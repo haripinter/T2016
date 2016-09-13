@@ -76,6 +76,20 @@ class XTimer{
         return status_hari;
     }
 
+    void add_timer(byte n_timer){
+        set_timer(n_timer, true);
+    }
+
+    void del_timer(byte n_timer){
+        set_timer(n_timer, false);
+    }
+
+    void set_timer(byte n_timer, boolean data){
+        timer_status[n_timer] = data;
+        target_ram = start_ram + (n_timer * 6);
+        EEPROM.write(target_ram + 1, timer_status[n_timer]);
+    }
+
     void load_timer_full(){
         for(byte it=0; it<20; it++){
             load_timer(it);
@@ -245,8 +259,8 @@ String menu_referensi_hari[2] = {
 String menu_timer[5] = {
   "Timer:",
   "Lagu :",
-  "[Simpan Timer]",
-  "[Hapus Timer]",
+  "[Simpan]",
+  "[Hapus]",
   kembali
 };
 
@@ -647,14 +661,33 @@ void proses_menu(){
 
         case MENU_TIMER:
             if(menu_item == MENU_KEMBALI){
-              menu_level = MENU_LIST_TIMER;
-              menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
-              menu_item = menu_item_list_timer_last;
-              MENU_KEMBALI = menu_item_max;
-              // level naik, item reset
-              menu_listener(TETAP, TETAP);
+                menu_level = MENU_LIST_TIMER;
+                menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
+                menu_item = menu_item_list_timer_last;
+                MENU_KEMBALI = menu_item_max;
+                // level naik, item reset
+                menu_listener(TETAP, TETAP);
+                
+            }else if(menu_item == 1){ // Timer
+                
+            }else if(menu_item == 2){ // Lagu
               
-            }else{
+            }else if(menu_item == 3){ // Simpan
+                for(byte it=0; it<XTimer_Set.MAX_TIMER; it++){
+                    if(XTimer_Set.timer_status[it] == 0){
+                      XTimer_Set.add_timer(it);
+                      break;
+                    }
+                }
+                check_hari();
+                menu_level = MENU_LIST_TIMER;
+                menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
+                menu_item = menu_item_list_timer_last;
+                MENU_KEMBALI = menu_item_max;
+                // level naik, item reset
+                menu_listener(TETAP, TETAP);
+            }else if(menu_item == 4){ // Hapus
+              
             }
             break;
     }
