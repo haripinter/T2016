@@ -25,14 +25,19 @@ byte btn_bef = 0;
 class XTimer{
   
   public:
+
+    byte MAX_TIMER; // maksimal timer dalam 1 hari
+    byte MAX_LAGU;  // maksimal jumlah lagu
     
     boolean status_hari; // 0 (start_timer)
-    byte timer_status;   // start_timer + n_timer + 1
-    byte timer_jam;      // start_timer + n_timer + 2
-    byte timer_menit;    // start_timer + n_timer + 3
-    byte timer_L1;       // start_timer + n_timer + 4
-    byte timer_L2;       // start_timer + n_timer + 5
-    byte timer_L3;       // start_timer + n_timer + 6 
+    byte timer_status[20];   // start_timer + n_timer + 1
+    byte timer_jam[20];      // start_timer + n_timer + 2
+    byte timer_menit[20];    // start_timer + n_timer + 3
+    byte timer_L1[20];       // start_timer + n_timer + 4
+    byte timer_L2[20];       // start_timer + n_timer + 5
+    byte timer_L3[20];       // start_timer + n_timer + 6 
+
+    byte jumlah_timer_aktif;
 
     byte hari;
     int start_ram;
@@ -40,6 +45,10 @@ class XTimer{
 
 
     XTimer(byte h){
+      MAX_TIMER = 20;
+      MAX_LAGU = 100;
+      jumlah_timer_aktif = 0;
+      
       set_hari(h);
     }
 
@@ -47,8 +56,10 @@ class XTimer{
     void set_hari(byte h){
         hari = h;
         start_ram = 100 + (h * 125);
-        Serial.print("START_RAM : ");
-        Serial.println(start_ram);
+        //Serial.print("START_RAM : ");
+        //Serial.println(start_ram);
+
+        load_timer_full();
     }
 
     void set_status_hari(boolean stat){
@@ -65,11 +76,21 @@ class XTimer{
         return status_hari;
     }
 
-    // n_timer start dari 0
+    void load_timer_full(){
+        for(byte it=0; it<20; it++){
+            load_timer(it);
+            // jumlah timer yang aktif
+            if(timer_status[it] == 1){
+              jumlah_timer_aktif++;
+            }
+        }
+    }
+
+    // n_timer start dari 0-19
     void load_timer(byte n_timer){
         target_ram = start_ram + (n_timer * 6);
         
-        Serial.print("RAM_STATUS_HARI : ");
+        /*Serial.print("RAM_STATUS_HARI : ");
         Serial.println(start_ram);
         Serial.print("Timer ke : ");
         Serial.println(n_timer);
@@ -84,15 +105,43 @@ class XTimer{
         Serial.print("ram_L2: ");
         Serial.println(target_ram + 5);
         Serial.print("ram_L3: ");
-        Serial.println(target_ram + 6);
-        
-        /*
-        timer_status = EEPROM.read(target_ram + 1);
-        timer_jam = EEPROM.read(target_ram + 2);
-        timer_menit = EEPROM.read(target_ram + 3);
-        timer_L1 = EEPROM.read(target_ram + 4);
-        timer_L2 = EEPROM.read(target_ram + 5);
-        timer_L3 = EEPROM.read(target_ram + 6);*/
+        Serial.println(target_ram + 6);*/
+
+        //for(byte it=0; it<MAX_TIMER; it++){
+            timer_status[n_timer] = EEPROM.read(target_ram + 1);
+            timer_jam[n_timer] = EEPROM.read(target_ram + 2);
+            timer_menit[n_timer] = EEPROM.read(target_ram + 3);
+            timer_L1[n_timer] = EEPROM.read(target_ram + 4);
+            timer_L2[n_timer] = EEPROM.read(target_ram + 5);
+            timer_L3[n_timer] = EEPROM.read(target_ram + 6);
+            
+            if(timer_status[n_timer] > 100){
+              timer_status[n_timer] = false;
+              EEPROM.write(target_ram + 1, timer_status[n_timer]);
+            }
+            if(timer_jam[n_timer] > 24){
+              timer_jam[n_timer] = 0;
+              EEPROM.write(target_ram + 2, timer_jam[n_timer]);
+            }
+            if(timer_menit[n_timer] > 60){
+              timer_menit[n_timer] = 0;
+              EEPROM.write(target_ram + 3, timer_menit[n_timer]);
+            }
+            if(timer_L1[n_timer] > MAX_LAGU){
+              timer_L1[n_timer] = 0;
+              EEPROM.write(target_ram + 4, timer_L1[n_timer]);
+            }
+            if(timer_L2[n_timer] > MAX_LAGU){
+              timer_L2[n_timer] = 0;
+              EEPROM.write(target_ram + 2, timer_L2[n_timer]);
+            }
+            if(timer_L3[n_timer] > MAX_LAGU){
+              timer_L3[n_timer] = 0;
+              EEPROM.write(target_ram + 2, timer_L3[n_timer]);
+            }
+
+            
+        //}
     }
 };
 
@@ -131,7 +180,13 @@ boolean hari_aktif[7] = {
   true,true,true,true,true,true,true
 };
 
+byte timer_aktif_hari[7] = {
+  0,0,0,0,0,0,0
+};
+
 byte hari_aktif_tmp = 0;
+byte hari_terpilih = 0;
+
 
 const byte MENU_UTAMA = 1;
 const byte MENU_LIST_MODE = 2;
@@ -175,9 +230,9 @@ String menu_list_hari[8] = {
 };
 
 String menu_list_timer[3] = {
-  "1. Manual",
   // TIMER X
   "[Tambah Timer]",
+  "[Copy Timer]",
   kembali
 };
 
@@ -187,9 +242,10 @@ String menu_referensi_hari[2] = {
   kembali
 };
 
-String menu_timer[4] = {
+String menu_timer[5] = {
   "Timer:",
   "Lagu :",
+  "[Simpan Timer]",
   "[Hapus Timer]",
   kembali
 };
@@ -271,6 +327,9 @@ void setup() {
         menu_timeout_last = millis();
         break;
     }
+
+    // jumlah timer
+    check_hari();
     
     
     lcd.begin(16,2);
@@ -492,9 +551,19 @@ void proses_menu(){
             }else{
               // record hari yang terpilih
               menu_item_list_hari_last = menu_item;
-              
+
+              String hariter = "Hari terpilih : ";
+              hariter.concat(hari[hari_terpilih]);
+              hariter.concat(" (");
+              hariter.concat(hari_terpilih);
+              hariter.concat(")");
+              Serial.println(hariter);
+
+              //XTimer_Set = XTimer(hari_terpilih);
+              XTimer_Set.set_hari(hari_terpilih);
+
               menu_level = MENU_LIST_TIMER;
-              menu_item_max = 3 + jumlah_timer;
+              menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
               menu_item = 1;
               MENU_KEMBALI = menu_item_max;
               menu_listener(TETAP, TETAP);
@@ -506,12 +575,42 @@ void proses_menu(){
               menu_level = MENU_LIST_HARI;
               menu_item_max = count_hari_aktif()+1;
               menu_item = menu_item_list_hari_last;
+              MENU_KEMBALI = menu_item_max;
               // level naik, item reset
               menu_listener(TETAP, TETAP);
               
-            }else if(menu_item == 1){ // disamakan
+            }else{
+                if(XTimer_Set.jumlah_timer_aktif > 0){
+                
+                }else{
+                    // add timer
+                    if(menu_item == 1){
+                        // record timer yang terpilih
+                        menu_item_list_timer_last = menu_item;
+
+                        menu_level = MENU_TIMER;
+                        menu_item_max = 5;
+                        menu_item = 1;
+                        MENU_KEMBALI = menu_item_max;
+                        menu_listener(TETAP, TETAP);
+
+
+                    // or copy timer
+                    }else if(menu_item == 2){
+                        // record timer yang terpilih
+                        menu_item_list_timer_last = menu_item;
+              
+                        menu_level = MENU_REFERENSI_HARI;
+                        menu_item_max = 2 + jumlah_hari;
+                        menu_item = 1;
+                        MENU_KEMBALI = menu_item_max;
+                        menu_listener(TETAP, TETAP);
+                    }
+                }
+            }
+            /*else if(menu_item == 1){ // disamakan
               // record timer yang terpilih
-              menu_item_list_timer_last = menu_item;
+              /*menu_item_list_timer_last = menu_item;
               
               menu_level = MENU_REFERENSI_HARI;
               menu_item_max = 2 + jumlah_hari;
@@ -521,20 +620,22 @@ void proses_menu(){
               
             }else{
               // record timer yang terpilih
-              menu_item_list_timer_last = menu_item;
+              /*menu_item_list_timer_last = menu_item;
 
               menu_level = MENU_TIMER;
               menu_item_max = 4;
               menu_item = 1;
               MENU_KEMBALI = 4;
               menu_listener(TETAP, TETAP);
+              
             }
+            */
             break;
             
         case MENU_REFERENSI_HARI:
             if(menu_item == MENU_KEMBALI){
               menu_level = MENU_LIST_TIMER;
-              menu_item_max = 3 + jumlah_timer;
+              menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
               menu_item = menu_item_list_timer_last;
               MENU_KEMBALI = menu_item_max;
               // level naik, item reset
@@ -547,7 +648,7 @@ void proses_menu(){
         case MENU_TIMER:
             if(menu_item == MENU_KEMBALI){
               menu_level = MENU_LIST_TIMER;
-              menu_item_max = 3 + jumlah_timer;
+              menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
               menu_item = menu_item_list_timer_last;
               MENU_KEMBALI = menu_item_max;
               // level naik, item reset
@@ -633,63 +734,95 @@ void menu_listener(byte level, byte item){
             
         case MENU_LIST_HARI:
             menu_item = hx_constrain(menu_item,1,menu_item_max, item);
-
+            byte mn1,mn2;
             if(menu_item <= 2){
                 if(DTIMER_MODE == DTIMER_MODE_UMUM){
                   m1 = hari[1];
                   m2 = hari[2];
+                  mn1 = 1; mn2 = 2;
                 }else if(DTIMER_MODE == DTIMER_MODE_ISLAMI){
                   m1 = hari[0];
                   m2 = hari[1];
+                  mn1 = 0; mn2 = 1;
                 }else if(DTIMER_MODE == DTIMER_MODE_HARIAN){
                   m1 = hari[0];
                   m2 = hari[1];
+                  mn1 = 0; mn2 = 1;
                 }
-              
-              //m1 = menu_list_hari[0];
-              //m2 = menu_list_hari[1];
             }else if(menu_item < menu_item_max){
                 if(DTIMER_MODE == DTIMER_MODE_UMUM){
                   m1 = hari[menu_item-1];
                   m2 = hari[menu_item];
+                  mn1 = menu_item-1; mn2 = menu_item;
                 }else if(DTIMER_MODE == DTIMER_MODE_ISLAMI){
                   if(menu_item <= 5){
                     m1 = hari[menu_item-2];
                     m2 = hari[menu_item-1];
+                    mn1 = menu_item-2; mn2 = menu_item-1;
                   }else{
                     m1 = hari[menu_item-2];
                     m2 = hari[menu_item];
+                    mn1 = menu_item-2; mn2 = menu_item;
                   }
                 }else if(DTIMER_MODE == DTIMER_MODE_HARIAN){
                   m1 = hari[menu_item-2];
                   m2 = hari[menu_item-1];
+                  mn1 = menu_item-2; mn2 = menu_item-1;
                 }
-
-              
-              //m1 = menu_list_hari[menu_item-2];
-              //m2 = menu_list_hari[menu_item-1];
             }else{
                 if(DTIMER_MODE == DTIMER_MODE_UMUM){
                   m1 = hari[menu_item_max-1];
                   m2 = kembali;
+                  mn1 = menu_item_max-1; mn2 = 10;
                 }else if(DTIMER_MODE == DTIMER_MODE_ISLAMI){
                   m1 = hari[menu_item_max-1];
                   m2 = kembali;
+                  mn1 = menu_item_max-1; mn2 = 10;
                 }else if(DTIMER_MODE == DTIMER_MODE_HARIAN){
                   m1 = hari[menu_item_max-2];
                   m2 = kembali;
+                  mn1 = menu_item_max-2; mn2 = 10;
                 }
-                
-              //m1 = menu_list_hari[menu_item_max-2];
-              //m2 = menu_list_hari[menu_item_max-1];
             }
+
+            if(mn1 <= menu_item_max){
+              m1.concat(" (t:");
+              m1.concat(timer_aktif_hari[mn1]);
+              m1.concat(")");
+            }
+            if(mn2 <= menu_item_max){
+              m2.concat(" (t:");
+              m2.concat(timer_aktif_hari[mn2]);
+              m2.concat(")");
+            }
+
+            if(menu_item < 2){
+              hari_terpilih = mn1;
+            }else{
+              hari_terpilih = mn2;
+            }
+            
             set_display(m1, m2);
             break;
             
         case MENU_LIST_TIMER:
             menu_item = hx_constrain(menu_item,1,menu_item_max, item);
 
-            if(menu_item <= 2){
+            // aktifkan timer yang akan dikonfigurasi
+            if(XTimer_Set.jumlah_timer_aktif > 0){
+              m1 = "AAA";
+              m2 = "BBB";
+            }else{
+                if(menu_item <= 2){
+                  m1 = menu_list_timer[0];
+                  m2 = menu_list_timer[1];
+                }else{
+                  m1 = menu_list_timer[menu_item_max-2];
+                  m2 = menu_list_timer[menu_item_max-1];
+                }
+            }
+
+            /*if(menu_item <= 2){
               m1 = menu_list_timer[0];
               m2 = "Timer 1";
             }else if(menu_item < menu_item_max){
@@ -705,6 +838,7 @@ void menu_listener(byte level, byte item){
               m1 = menu_list_timer[1];
               m2 = menu_list_timer[2];
             }
+            */
             set_display(m1, m2);
             break;
             
@@ -861,20 +995,23 @@ void sync_mode(){
 }
 
 void set_mode_hari(byte tHari, boolean data){
-    XTimer_Set = XTimer(tHari);
+    //XTimer_Set = XTimer(tHari);
+    XTimer_Set.set_hari(tHari);
     XTimer_Set.set_status_hari(data);
 }
 
 void check_hari(){
     for(byte hx=0; hx<7; hx++){
-        XTimer_Set = XTimer(hx);
+        //XTimer_Set = XTimer(hx);
+        XTimer_Set.set_hari(hx);
         String msgc = "Status Hari ";
         msgc.concat(hari[hx]);
         msgc.concat("(");
         msgc.concat(hx);
         msgc.concat(") = ");
         msgc.concat(XTimer_Set.get_status_hari());
-        Serial.println(msgc);
+        //Serial.println(msgc);
+        timer_aktif_hari[hx] = XTimer_Set.jumlah_timer_aktif;
     }
 }
 
