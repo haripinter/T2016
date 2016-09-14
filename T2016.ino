@@ -99,8 +99,8 @@ class XTimer{
               jumlah_timer_aktif++;
             }
         }
-        Serial.print("HARI : ");
-        Serial.println(hari);
+        //Serial.print("HARI : ");
+        //Serial.println(hari);
     }
 
     // n_timer start dari 0-19
@@ -579,16 +579,14 @@ void proses_menu(){
               hariter.concat(" (");
               hariter.concat(hari_terpilih);
               hariter.concat(")");
-              Serial.println(hariter);
-
-              
+              //Serial.println(hariter);
 
               //XTimer_Set = XTimer(hari_terpilih);
               XTimer_Set.set_hari(hari_terpilih);
 
               String jumtimer = "Jumlah timer : ";
               jumtimer.concat(XTimer_Set.jumlah_timer_aktif);
-              Serial.println(jumtimer);
+              //Serial.println(jumtimer);
                 
               menu_level = MENU_LIST_TIMER;
               menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
@@ -857,8 +855,21 @@ void menu_listener(byte level, byte item){
 
             // aktifkan timer yang akan dikonfigurasi
             if(XTimer_Set.jumlah_timer_aktif > 0){
-              m1 = "AAA";
-              m2 = "BBB";
+                if(menu_item <= 2){
+                  if(XTimer_Set.jumlah_timer_aktif == 1){
+                    m1 = "Timer 1";
+                    m2 = menu_list_timer[0];
+                  }else{
+                    m1 = "Timer 1";
+                    m2 = "Timer 2";
+                  }
+                }else if(menu_item < menu_item_max-2){
+                  m1 = "x"; //menu_list_timer[menu_item-2];
+                  m2 = "Y"; //menu_list_timer[menu_item-1];
+                }else{
+                  m1 = menu_list_timer[menu_item-3];
+                  m2 = menu_list_timer[menu_item-2];
+                }
             }else{
                 if(menu_item <= 2){
                   m1 = menu_list_timer[0];
@@ -1051,12 +1062,12 @@ void check_hari(){
     for(byte hx=0; hx<7; hx++){
         //XTimer_Set = XTimer(hx);
         XTimer_Set.set_hari(hx);
-        String msgc = "Status Hari ";
-        msgc.concat(hari[hx]);
-        msgc.concat("(");
-        msgc.concat(hx);
-        msgc.concat(") = ");
-        msgc.concat(XTimer_Set.get_status_hari());
+        //String msgc = "Status Hari ";
+        //msgc.concat(hari[hx]);
+        //msgc.concat("(");
+        //msgc.concat(hx);
+        //msgc.concat(") = ");
+        //msgc.concat(XTimer_Set.get_status_hari());
         //Serial.println(msgc);
         timer_aktif_hari[hx] = XTimer_Set.jumlah_timer_aktif;
     }
