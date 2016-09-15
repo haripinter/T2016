@@ -37,6 +37,8 @@ class XTimer{
     byte timer_L2[20];       // start_timer + n_timer + 5
     byte timer_L3[20];       // start_timer + n_timer + 6 
 
+    byte timer_status_sort[20];
+
     byte jumlah_timer_aktif;
 
     byte hari;
@@ -76,15 +78,68 @@ class XTimer{
         return status_hari;
     }
 
-    void add_timer(byte n_timer){
-        set_timer(n_timer, true);
+    void add_timer(){
+        byte target = jumlah_timer_aktif + 1;
+        for(byte it=0; it<MAX_TIMER; it++){
+            if(timer_status[it] == 0){
+                set_timer(it, target);
+                jumlah_timer_aktif = target;
+                break;
+            }
+        }
+        sort_timer_status();
     }
 
+    // n_timer seperti pada target fungsi add_timer
+    // n_timer bernilai 0-19, sesuai 
     void del_timer(byte n_timer){
-        set_timer(n_timer, false);
+        byte target = timer_status[n_timer];
+        boolean removed  = false;
+        for(byte it=0; it<MAX_TIMER; it++){
+            if(timer_status[it] == target){
+                if(!removed){
+                  set_timer(it, 0);
+                  removed = true;
+                }
+            }else if(timer_status[it] > target){
+                set_timer(it, (timer_status[it]-1));
+            }
+        }
+        sort_timer_status();
     }
 
-    void set_timer(byte n_timer, boolean data){
+    void sort_timer_status(){
+        
+        // replace 0 jadi 99
+        byte timer_tmp[20];
+        for(byte it=0; it<MAX_TIMER; it++){
+            if(timer_status[it] > 0){
+              timer_tmp[it] = timer_status[it];
+            }else{
+              timer_tmp[it] = 99;
+            }
+        }
+
+        // sorting
+        byte tmp = 0;
+        byte tmpi= 0;
+        for(byte i=0; i<MAX_TIMER-1; i++){
+            for(byte j=1; j<MAX_TIMER; j++){
+                if(timer_tmp[i] > timer_tmp[j]){
+                  tmp = timer_tmp[i];
+                  timer_tmp[i] = timer_tmp[j];
+                  timer_tmp[j] = tmp;
+
+                  tmpi = timer_status_sort[i];
+                  timer_status_sort[i] = timer_status_sort[j];
+                  timer_status_sort[j] = tmpi;
+                }
+            }
+        }
+    }
+
+    // n_timer = 0-19, data = 1-20
+    void set_timer(byte n_timer, byte data){
         timer_status[n_timer] = data;
         target_ram = start_ram + (n_timer * 6);
         EEPROM.write(target_ram + 1, timer_status[n_timer]);
@@ -95,7 +150,7 @@ class XTimer{
         for(byte it=0; it<20; it++){
             load_timer(it);
             // jumlah timer yang aktif
-            if(timer_status[it] == 1){
+            if(timer_status[it] > 0){
               jumlah_timer_aktif++;
             }
         }
@@ -708,13 +763,8 @@ void proses_menu(){
             }else if(menu_item == 2){ // Lagu
               
             }else if(menu_item == 3){ // Simpan
-                for(byte it=0; it<XTimer_Set.MAX_TIMER; it++){
-                    if(XTimer_Set.timer_status[it] == 0){
-                      XTimer_Set.add_timer(it);
-                      break;
-                    }
-                }
-                //check_hari();
+                // tambah timer pada ram yang terbawah dan belum dipakai
+                XTimer_Set.add_timer();
                 // recount jumlah timer aktif
                 XTimer_Set.set_hari(hari_terpilih);
                 
@@ -726,7 +776,7 @@ void proses_menu(){
                 menu_listener(TETAP, TETAP);
 
                 tersinkonisasi = false;
-            }else if(menu_item == 4){ // 
+            }else if(menu_item == 4){ // hapus
 
                 Serial.print("Timer Terpilih : ");
                 Serial.println(timer_terpilih); 
