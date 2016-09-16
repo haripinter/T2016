@@ -38,6 +38,7 @@ class XTimer{
     byte timer_L3[20];       // start_timer + n_timer + 6 
 
     byte timer_status_sort[20];
+    //byte timer_tmpx[20];
 
     byte jumlah_timer_aktif;
 
@@ -52,6 +53,28 @@ class XTimer{
       jumlah_timer_aktif = 0;
       
       set_hari(h);
+    }
+
+    void check_ram(){
+        load_timer_full();
+        String logg = "\nHari terpilih:";
+        logg.concat(hari);
+        logg.concat("\n");
+        Serial.print(logg);
+        for(byte i=0; i<MAX_TIMER; i++){
+          logg = "";
+          logg.concat("Timer ");
+          logg.concat(i);
+          logg.concat(" : ");
+          logg.concat(timer_status[i]);
+          logg.concat(" Pos:");
+          logg.concat(timer_status_sort[i]);
+          //logg.concat(" TMP:");
+          //logg.concat(timer_tmpx[i]);
+          logg.concat("\n");
+          Serial.print(logg);
+        }
+        
     }
 
     // h = hari, start dari 0
@@ -109,32 +132,35 @@ class XTimer{
     }
 
     void sort_timer_status(){
-        
-        // replace 0 jadi 99
-        byte timer_tmp[20];
+   
+        // reset order
+        byte timer_tmpx[20];
+        //byte timer_tmp[20];
         for(byte it=0; it<MAX_TIMER; it++){
             if(timer_status[it] > 0){
-              timer_tmp[it] = timer_status[it];
+              timer_tmpx[it] = timer_status[it];
             }else{
-              timer_tmp[it] = 99;
+              timer_tmpx[it] = 99;
             }
+            timer_status_sort[it] = it;
         }
 
         // sorting
         byte tmp = 0;
         byte tmpi= 0;
         for(byte i=0; i<MAX_TIMER-1; i++){
-            for(byte j=1; j<MAX_TIMER; j++){
-                if(timer_tmp[i] > timer_tmp[j]){
-                  tmp = timer_tmp[i];
-                  timer_tmp[i] = timer_tmp[j];
-                  timer_tmp[j] = tmp;
+            for(byte j=(i+1); j<MAX_TIMER; j++){
+                if(timer_tmpx[i] > timer_tmpx[j]){
+                  tmp = timer_tmpx[i];
+                  timer_tmpx[i] = timer_tmpx[j];
+                  timer_tmpx[j] = tmp;
 
                   tmpi = timer_status_sort[i];
                   timer_status_sort[i] = timer_status_sort[j];
                   timer_status_sort[j] = tmpi;
                 }
             }
+            
         }
     }
 
@@ -156,6 +182,8 @@ class XTimer{
         }
         //Serial.print("HARI : ");
         //Serial.println(hari);
+
+        sort_timer_status();
     }
 
     // n_timer start dari 0-19
@@ -633,17 +661,18 @@ void proses_menu(){
               menu_item_list_hari_last = menu_item;
 
               String hariter = "Hari terpilih : ";
-              hariter.concat(hari[hari_terpilih]);
-              hariter.concat(" (");
-              hariter.concat(hari_terpilih);
-              hariter.concat(")");
+              //hariter.concat(hari[hari_terpilih]);
+              //hariter.concat(" (");
+              //hariter.concat(hari_terpilih);
+              //hariter.concat(")");
               //Serial.println(hariter);
 
               //XTimer_Set = XTimer(hari_terpilih);
               XTimer_Set.set_hari(hari_terpilih);
+              XTimer_Set.check_ram();
 
-              String jumtimer = "Jumlah timer : ";
-              jumtimer.concat(XTimer_Set.jumlah_timer_aktif);
+              //String jumtimer = "Jumlah timer : ";
+              //jumtimer.concat(XTimer_Set.jumlah_timer_aktif);
               //Serial.println(jumtimer);
                 
               menu_level = MENU_LIST_TIMER;
@@ -655,6 +684,7 @@ void proses_menu(){
             break;
             
         case MENU_LIST_TIMER:
+
             if(menu_item == MENU_KEMBALI){
               menu_level = MENU_LIST_HARI;
               menu_item_max = count_hari_aktif()+1;
@@ -664,7 +694,11 @@ void proses_menu(){
               menu_listener(TETAP, TETAP);
               
             }else{
+                // jika ada timer yang aktif
                 if(XTimer_Set.jumlah_timer_aktif > 0){
+
+                    // jika menu yang dipilih bukan timer, tapi add-timer
+                    // atau copy-timer
                     if(menu_item > XTimer_Set.jumlah_timer_aktif){
                         if(menu_item == (XTimer_Set.jumlah_timer_aktif+1)){
                             // record timer yang terpilih
@@ -677,6 +711,9 @@ void proses_menu(){
                             menu_listener(TETAP, TETAP);
                         }
                     }else{
+                        // jika ada timer yang dipilih
+
+                        
                         // record timer yang terpilih
                         menu_item_list_timer_last = menu_item;
                         timer_terpilih = menu_item-1;
@@ -750,6 +787,11 @@ void proses_menu(){
             break;
 
         case MENU_TIMER:
+
+            // timer sesuai hari yang dipilih
+            XTimer_Set.set_hari(hari_terpilih);
+            XTimer_Set.check_ram();
+            
             if(menu_item == MENU_KEMBALI){
                 menu_level = MENU_LIST_TIMER;
                 menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
@@ -766,7 +808,8 @@ void proses_menu(){
                 // tambah timer pada ram yang terbawah dan belum dipakai
                 XTimer_Set.add_timer();
                 // recount jumlah timer aktif
-                XTimer_Set.set_hari(hari_terpilih);
+                //XTimer_Set.set_hari(hari_terpilih);
+                //XTimer_Set.check_ram();
                 
                 menu_level = MENU_LIST_TIMER;
                 menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
@@ -778,10 +821,11 @@ void proses_menu(){
                 tersinkonisasi = false;
             }else if(menu_item == 4){ // hapus
 
-                Serial.print("Timer Terpilih : ");
-                Serial.println(timer_terpilih); 
+                //Serial.print("Timer Terpilih : ");
+                //Serial.println(timer_terpilih); 
                 XTimer_Set.del_timer(timer_terpilih);
-                XTimer_Set.set_hari(hari_terpilih);
+                //XTimer_Set.set_hari(hari_terpilih);
+                //XTimer_Set.check_ram();
 
                 //check_hari();
                 menu_level = MENU_LIST_TIMER;
