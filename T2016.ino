@@ -1000,21 +1000,24 @@ void menu_listener(byte level, byte item){
             if(XTimer_Set.jumlah_timer_aktif > 0){
                 if(menu_item <= 2){
                   if(XTimer_Set.jumlah_timer_aktif == 1){
-                    m1 = "Timer 1";
+                    m1 = "Timer ";
+                    m1.concat(XTimer_Set.timer_status_sort[0]);
                     m2 = menu_list_timer[0];
                   }else{
-                    m1 = "Timer 1";
-                    m2 = "Timer 2";
+                    m1 = "Timer ";
+                    m1.concat(XTimer_Set.timer_status_sort[0]);
+                    m2 = "Timer ";
+                    m2.concat(XTimer_Set.timer_status_sort[1]);
                   }
                 }else if(menu_item < (menu_item_max-1)){
                   m1 = "Timer ";
-                  m1.concat(menu_item-1);
-
+                  m1.concat(XTimer_Set.timer_status_sort[menu_item-2]);
+                  
                   if(menu_item == (menu_item_max-2)){
                     m2 = menu_list_timer[2-(menu_item_max-menu_item)];
                   }else{
                     m2 = "Timer ";
-                    m2.concat(menu_item);
+                    m2.concat(XTimer_Set.timer_status_sort[menu_item-1]);
                   }
                 }else{
                   m1 = menu_list_timer[1-(menu_item_max-menu_item)];
