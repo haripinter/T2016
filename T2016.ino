@@ -337,9 +337,8 @@ String menu_list_timer[3] = {
 };
 
 String menu_referensi_hari[2] = {
-  "1. Manual",
-  // HARI X
   kembali
+  // HARI X
 };
 
 String menu_timer[5] = {
@@ -709,6 +708,15 @@ void proses_menu(){
                             menu_item = 1;
                             MENU_KEMBALI = menu_item_max;
                             menu_listener(TETAP, TETAP);
+                        }else if(menu_item == (XTimer_Set.jumlah_timer_aktif+2)){
+                            // record timer yang terpilih
+                            menu_item_list_timer_last = menu_item;
+              
+                            menu_level = MENU_REFERENSI_HARI;
+                            menu_item_max = 1 + jumlah_hari;
+                            menu_item = 1;
+                            MENU_KEMBALI = 1;
+                            menu_listener(TETAP, TETAP);
                         }
                     }else{
                         // jika ada timer yang dipilih
@@ -742,9 +750,9 @@ void proses_menu(){
                         menu_item_list_timer_last = menu_item;
               
                         menu_level = MENU_REFERENSI_HARI;
-                        menu_item_max = 2 + jumlah_hari;
+                        menu_item_max = 1 + jumlah_hari;
                         menu_item = 1;
-                        MENU_KEMBALI = menu_item_max;
+                        MENU_KEMBALI = 1;
                         menu_listener(TETAP, TETAP);
                     }
                 }
@@ -1067,8 +1075,9 @@ void menu_listener(byte level, byte item){
                 m2 = menu_referensi_hari[1];
               }
             }else{
-              m1 = hari[jumlah_hari-1];
-              m2 = menu_referensi_hari[1];
+              m1 = hari[jumlah_hari-2];
+              m2 = hari[jumlah_hari-1];
+              //m2 = menu_referensi_hari[1];
             }
             set_display(m1, m2);
             break;
