@@ -101,24 +101,32 @@ class XTimer{
         return status_hari;
     }
 
-    void add_timer(){
-        byte target = jumlah_timer_aktif + 1;
-        for(byte it=0; it<MAX_TIMER; it++){
-            if(timer_status[it] == 0){
-                set_timer(it, target);
-                //jumlah_timer_aktif = target;
-                //jumlah_timer_aktif++;
-                break;
+    // n_timer = timer_terpilih
+    void add_timer(byte n_timer){
+        byte target = n_timer;
+        // jika ada timer yang dipilih
+        if(n_timer > 0){
+            target = n_timer - 1;
+
+            // update timer data
+        }else{
+            target = jumlah_timer_aktif + 1;
+            for(byte it=0; it<MAX_TIMER; it++){
+                if(timer_status[it] == 0){
+                  set_timer(it, target);
+                  break;
+                }
             }
+            // update timer data
         }
         load_timer_full();
         //sort_timer_status();
     }
 
     // n_timer seperti pada target fungsi add_timer
-    // n_timer bernilai 0-19, sesuai 
+    // n_timer bernilai 1-20, sesuai 
     void del_timer(byte n_timer){
-        byte target = timer_status_sort[n_timer];
+        byte target = timer_status_sort[(n_timer-1)];
         boolean removed  = false;
         for(byte ta=0; ta<jumlah_timer_aktif; ta++){
             if(timer_status_sort[ta] == target){
@@ -675,7 +683,7 @@ void proses_menu(){
               // record hari yang terpilih
               menu_item_list_hari_last = menu_item;
 
-              String hariter = "Hari terpilih : ";
+              //String hariter = "Hari terpilih : ";
               //hariter.concat(hari[hari_terpilih]);
               //hariter.concat(" (");
               //hariter.concat(hari_terpilih);
@@ -715,6 +723,7 @@ void proses_menu(){
                     // jika menu yang dipilih bukan timer, tapi add-timer
                     // atau copy-timer
                     if(menu_item > XTimer_Set.jumlah_timer_aktif){
+                        timer_terpilih = 0;
                         if(menu_item == (XTimer_Set.jumlah_timer_aktif+1)){
                             // record timer yang terpilih
                             menu_item_list_timer_last = menu_item;
@@ -740,7 +749,7 @@ void proses_menu(){
                         
                         // record timer yang terpilih
                         menu_item_list_timer_last = menu_item;
-                        timer_terpilih = menu_item-1;
+                        timer_terpilih = menu_item;
 
                         menu_level = MENU_TIMER;
                         menu_item_max = 5;
@@ -830,7 +839,7 @@ void proses_menu(){
               
             }else if(menu_item == 3){ // Simpan
                 // tambah timer pada ram yang terbawah dan belum dipakai
-                XTimer_Set.add_timer();
+                XTimer_Set.add_timer(timer_terpilih);
                 // recount jumlah timer aktif
                 //XTimer_Set.set_hari(hari_terpilih);
                 //XTimer_Set.check_ram();
