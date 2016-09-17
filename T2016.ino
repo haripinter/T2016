@@ -106,29 +106,44 @@ class XTimer{
         for(byte it=0; it<MAX_TIMER; it++){
             if(timer_status[it] == 0){
                 set_timer(it, target);
-                jumlah_timer_aktif = target;
+                //jumlah_timer_aktif = target;
+                //jumlah_timer_aktif++;
                 break;
             }
         }
-        sort_timer_status();
+        load_timer_full();
+        //sort_timer_status();
     }
 
     // n_timer seperti pada target fungsi add_timer
     // n_timer bernilai 0-19, sesuai 
     void del_timer(byte n_timer){
-        byte target = timer_status[n_timer];
+        byte target = timer_status_sort[n_timer];
         boolean removed  = false;
-        for(byte it=0; it<MAX_TIMER; it++){
-            if(timer_status[it] == target){
+        for(byte ta=0; ta<jumlah_timer_aktif; ta++){
+            if(timer_status_sort[ta] == target){
                 if(!removed){
-                  set_timer(it, 0);
                   removed = true;
+                  set_timer(timer_status_sort[ta],0);
+                  //jumlah_timer_aktif--;
                 }
-            }else if(timer_status[it] > target){
-                set_timer(it, (timer_status[it]-1));
+            }else if(timer_status_sort[ta] > target){
+                set_timer(timer_status_sort[ta], (timer_status[timer_status_sort[ta]]-1));
             }
         }
-        sort_timer_status();
+        load_timer_full();
+        
+        /*for(byte it=0; it<MAX_TIMER; it++){
+            if(timer_status[timer_status_sort[it]] == target){
+                if(!removed){
+                  set_timer(timer_status_sort[it], 0);
+                  removed = true;
+                }
+            }else if(timer_status[timer_status_sort[it]] > target){
+                set_timer(it, (timer_status[it]-1));
+            }
+        }*/
+        //sort_timer_status();
     }
 
     void sort_timer_status(){
@@ -165,6 +180,7 @@ class XTimer{
     }
 
     // n_timer = 0-19, data = 1-20
+    // n_timer = RAM!
     void set_timer(byte n_timer, byte data){
         timer_status[n_timer] = data;
         target_ram = start_ram + (n_timer * 6);
