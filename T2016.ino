@@ -437,6 +437,13 @@ boolean tersinkonisasi = false;
 
 byte loctm1 = 99;
 byte loctm2 = 99;
+
+// kedip sttingan
+boolean kedip_status = true;
+boolean kedip_status_last = kedip_status;
+unsigned long kedip_limit = 300;
+unsigned long kedip_now = 0;
+unsigned long kedip_last = 0;
             
 void setup() {
     pinMode(tombol, INPUT);
@@ -498,6 +505,9 @@ void loop() {
             is_default_display = true;
         }
     }else{
+        if(menu_level == MENU_TIMER){
+          kedip_display();
+        }
         menu_timeout();
     }
     if(DLCD_BACKLIGHT == DLCD_BACKLIGHT_AUTO){
@@ -1198,6 +1208,40 @@ void set_display(String m1, String m2){
         lcd.setCursor(0,1);
     }
     lcd.print('>');
+}
+
+void kedip_display(){
+  if(menu_item <= 5){
+    switch(menu_item){
+      case 1:
+          lcd.setCursor(8,0);
+          break;
+      case 2:
+          lcd.setCursor(11,0);
+          break;
+      case 3:
+          lcd.setCursor(8,1);
+          break;
+      case 4:
+          lcd.setCursor(11,1);
+          break;
+      case 5:
+          lcd.setCursor(14,1);
+          break;
+    }
+
+    kedip_now = millis();
+    if(kedip_now - kedip_last >= kedip_limit){
+        kedip_status = !kedip_status;
+        if(kedip_status == true){
+          lcd.print("  ");
+        }else{
+          lcd.print("00");
+        }
+
+        kedip_last = kedip_now;
+    }
+  }
 }
 
 int hx_constrain(int val, int mini, int maxi, byte stat){
