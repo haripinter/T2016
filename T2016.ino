@@ -38,8 +38,7 @@ class XTimer{
     byte timer_L3[20];       // start_timer + n_timer + 6 
 
     byte timer_status_sort[20];
-    //byte timer_tmpx[20];
-
+    
     byte jumlah_timer_aktif;
 
     byte hari;
