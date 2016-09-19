@@ -434,6 +434,10 @@ unsigned long lcd_bl_timeout_limit = 5000L;
 // sinkronisasi hari dan jumlah timer
 boolean tersinkonisasi = false;
 
+
+byte loctm1 = 99;
+byte loctm2 = 99;
+            
 void setup() {
     pinMode(tombol, INPUT);
     pinMode(lcdBacklight, OUTPUT);
@@ -1028,28 +1032,35 @@ void menu_listener(byte level, byte item){
         case MENU_LIST_TIMER:
             menu_item = hx_constrain(menu_item,1,menu_item_max, item);
 
+            loctm1 = 99;
+            loctm2 = 99;
             // aktifkan timer yang akan dikonfigurasi
             if(XTimer_Set.jumlah_timer_aktif > 0){
                 if(menu_item <= 2){
                   if(XTimer_Set.jumlah_timer_aktif == 1){
-                    m1 = "Timer ";
-                    m1.concat(XTimer_Set.timer_status_sort[0]);
+                    //m1 = "Timer ";
+                    //m1.concat(XTimer_Set.timer_status_sort[0]);
+                    loctm1 = XTimer_Set.timer_status_sort[0];
                     m2 = menu_list_timer[0];
                   }else{
-                    m1 = "Timer ";
-                    m1.concat(XTimer_Set.timer_status_sort[0]);
-                    m2 = "Timer ";
-                    m2.concat(XTimer_Set.timer_status_sort[1]);
+                    //m1 = "Timer ";
+                    //m1.concat(XTimer_Set.timer_status_sort[0]);
+                    loctm1 = XTimer_Set.timer_status_sort[0];
+                    //m2 = "Timer ";
+                    loctm2 = XTimer_Set.timer_status_sort[1];
+                    //m2.concat(XTimer_Set.timer_status_sort[1]);
                   }
                 }else if(menu_item < (menu_item_max-1)){
-                  m1 = "Timer ";
-                  m1.concat(XTimer_Set.timer_status_sort[menu_item-2]);
+                  //m1 = "Timer ";
+                  //m1.concat(XTimer_Set.timer_status_sort[menu_item-2]);
+                  loctm1 = XTimer_Set.timer_status_sort[menu_item-2];
                   
                   if(menu_item == (menu_item_max-2)){
                     m2 = menu_list_timer[2-(menu_item_max-menu_item)];
                   }else{
-                    m2 = "Timer ";
-                    m2.concat(XTimer_Set.timer_status_sort[menu_item-1]);
+                    //m2 = "Timer ";
+                    //m2.concat(XTimer_Set.timer_status_sort[menu_item-1]);
+                    loctm2 = XTimer_Set.timer_status_sort[menu_item-1];
                   }
                 }else{
                   m1 = menu_list_timer[1-(menu_item_max-menu_item)];
@@ -1065,23 +1076,18 @@ void menu_listener(byte level, byte item){
                 }
             }
 
-            /*if(menu_item <= 2){
-              m1 = menu_list_timer[0];
-              m2 = "Timer 1";
-            }else if(menu_item < menu_item_max){
+            if(loctm1 != 99){
               m1 = "Timer ";
-              m1.concat(menu_item-2);
-              if(menu_item <= (jumlah_timer+1)){
-                m2 = "Timer ";
-                m2.concat(menu_item-1);
-              }else{
-                m2 = menu_list_timer[1];
-              }
-            }else{
-              m1 = menu_list_timer[1];
-              m2 = menu_list_timer[2];
+              m1.concat(loctm1);
+              m1.concat(" 00:00");
             }
-            */
+
+            if(loctm2 != 99){
+              m2 = "Timer ";
+              m2.concat(loctm2);
+              m2.concat(" 00:00");
+            }
+
             set_display(m1, m2);
             break;
             
@@ -1111,7 +1117,17 @@ void menu_listener(byte level, byte item){
 
             if(menu_item <= 2){
               m1 = menu_timer[0];
+              m1.concat(" ");
+              m1.concat("00"); // jam
+              m1.concat(":");
+              m1.concat("00"); // menit
               m2 = menu_timer[1];
+              m2.concat(" ");
+              m2.concat("00"); // Lagu1
+              m2.concat(",");
+              m2.concat("00"); // Lagu2
+              m2.concat(",");
+              m2.concat("00"); // Lagu3
             }else if(menu_item < menu_item_max){
               m1 = menu_timer[menu_item-2];
               m2 = menu_timer[menu_item-1];
