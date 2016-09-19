@@ -735,6 +735,7 @@ void proses_menu(){
                             menu_item_max = 5;
                             menu_item = 1;
                             MENU_KEMBALI = menu_item_max;
+                            
                             menu_listener(TETAP, TETAP);
                         }else if(menu_item == (XTimer_Set.jumlah_timer_aktif+2)){
                             // record timer yang terpilih
@@ -827,8 +828,9 @@ void proses_menu(){
             // timer sesuai hari yang dipilih
             XTimer_Set.set_hari(hari_terpilih);
             XTimer_Set.check_ram();
-            
-            if(menu_item == MENU_KEMBALI){
+
+            // menu_kembali = 8
+            if((menu_item-3) == MENU_KEMBALI){
                 menu_level = MENU_LIST_TIMER;
                 menu_item_max = 3 + XTimer_Set.jumlah_timer_aktif;
                 menu_item = menu_item_list_timer_last;
@@ -836,11 +838,11 @@ void proses_menu(){
                 // level naik, item reset
                 menu_listener(TETAP, TETAP);
                 
-            }else if(menu_item == 1){ // Timer
+            }else if(menu_item <= 2){ // Timer  menu 1 & 2
                 
-            }else if(menu_item == 2){ // Lagu
+            }else if(menu_item <= 5){ // Lagu menu 3 4 5
               
-            }else if(menu_item == 3){ // Simpan
+            }else if(menu_item == 6){ // Simpan
                 // tambah timer pada ram yang terbawah dan belum dipakai
                 XTimer_Set.add_timer(timer_terpilih);
                 // recount jumlah timer aktif
@@ -855,7 +857,7 @@ void proses_menu(){
                 menu_listener(TETAP, TETAP);
 
                 tersinkonisasi = false;
-            }else if(menu_item == 4){ // hapus
+            }else if(menu_item == 7){ // hapus
 
                 //Serial.print("Timer Terpilih : ");
                 //Serial.println(timer_terpilih); 
@@ -1113,9 +1115,9 @@ void menu_listener(byte level, byte item){
             break;
 
         case MENU_TIMER:
-            menu_item = hx_constrain(menu_item,1,menu_item_max, item);
+            menu_item = hx_constrain(menu_item,1,(menu_item_max+3), item);
 
-            if(menu_item <= 2){
+            if(menu_item <= 5){
               m1 = menu_timer[0];
               m1.concat(" ");
               m1.concat("00"); // jam
@@ -1128,10 +1130,12 @@ void menu_listener(byte level, byte item){
               m2.concat("00"); // Lagu2
               m2.concat(",");
               m2.concat("00"); // Lagu3
-            }else if(menu_item < menu_item_max){
-              m1 = menu_timer[menu_item-2];
-              m2 = menu_timer[menu_item-1];
-              if(menu_item-2 == 1){
+            }else if((menu_item-3) < menu_item_max){
+              //m1 = menu_timer[menu_item-2];
+              //m2 = menu_timer[menu_item-1];
+              m1 = menu_timer[menu_item-5];
+              m2 = menu_timer[menu_item-4];
+              if((menu_item-5) == 1){
                 m1.concat(" ");
                 m1.concat("00"); // Lagu1
                 m1.concat(",");
@@ -1187,8 +1191,8 @@ void set_display(String m1, String m2){
     lcd.print(m1);
     lcd.setCursor(1,1);
     lcd.print(m2);
-    
-    if(menu_item < 2){
+
+    if((menu_item < 2) || (menu_item < 3 && menu_level == MENU_TIMER)){
         lcd.setCursor(0,0);
     }else{
         lcd.setCursor(0,1);
