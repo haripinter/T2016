@@ -1131,6 +1131,14 @@ void menu_listener(byte level, byte item){
             }else if(menu_item < menu_item_max){
               m1 = menu_timer[menu_item-2];
               m2 = menu_timer[menu_item-1];
+              if(menu_item-2 == 1){
+                m1.concat(" ");
+                m1.concat("00"); // Lagu1
+                m1.concat(",");
+                m1.concat("00"); // Lagu2
+                m1.concat(",");
+                m1.concat("00"); // Lagu3
+              }
             }else{
               m1 = menu_timer[menu_item_max-2];
               m2 = menu_timer[menu_item_max-1];
