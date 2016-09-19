@@ -444,6 +444,13 @@ boolean kedip_status_last = kedip_status;
 unsigned long kedip_limit = 300;
 unsigned long kedip_now = 0;
 unsigned long kedip_last = 0;
+
+byte tmp_timer_data = 0;
+byte tmp_timer_jam = 0;
+byte tmp_timer_menit = 0;
+byte tmp_timer_lagu1 = 0;
+byte tmp_timer_lagu2 = 0;
+byte tmp_timer_lagu3 = 0;
             
 void setup() {
     pinMode(tombol, INPUT);
@@ -1215,18 +1222,23 @@ void kedip_display(){
     switch(menu_item){
       case 1:
           lcd.setCursor(8,0);
+          tmp_timer_data = tmp_timer_jam;
           break;
       case 2:
           lcd.setCursor(11,0);
+          tmp_timer_data = tmp_timer_menit;
           break;
       case 3:
           lcd.setCursor(8,1);
+          tmp_timer_data = tmp_timer_lagu1;
           break;
       case 4:
           lcd.setCursor(11,1);
+          tmp_timer_data = tmp_timer_lagu2;
           break;
       case 5:
           lcd.setCursor(14,1);
+          tmp_timer_data = tmp_timer_lagu3;
           break;
     }
 
@@ -1236,7 +1248,8 @@ void kedip_display(){
         if(kedip_status == true){
           lcd.print("  ");
         }else{
-          lcd.print("00");
+          if(tmp_timer_data<10) lcd.print('0');
+          lcd.print(tmp_timer_data);
         }
 
         kedip_last = kedip_now;
