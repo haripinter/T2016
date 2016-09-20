@@ -365,8 +365,8 @@ String menu_referensi_hari[2] = {
 };
 
 String menu_timer[5] = {
-  "Timer:",
-  "Lagu :",
+  "Jam :",
+  "Lagu:",
   "[Simpan]",
   "[Hapus]",
   kembali
@@ -1221,23 +1221,23 @@ void kedip_display(){
   if(menu_item <= 5){
     switch(menu_item){
       case 1:
-          lcd.setCursor(8,0);
+          lcd.setCursor(7,0);
           tmp_timer_data = tmp_timer_jam;
           break;
       case 2:
-          lcd.setCursor(11,0);
+          lcd.setCursor(10,0);
           tmp_timer_data = tmp_timer_menit;
           break;
       case 3:
-          lcd.setCursor(8,1);
+          lcd.setCursor(7,1);
           tmp_timer_data = tmp_timer_lagu1;
           break;
       case 4:
-          lcd.setCursor(11,1);
+          lcd.setCursor(10,1);
           tmp_timer_data = tmp_timer_lagu2;
           break;
       case 5:
-          lcd.setCursor(14,1);
+          lcd.setCursor(13,1);
           tmp_timer_data = tmp_timer_lagu3;
           break;
     }
