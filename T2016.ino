@@ -1136,29 +1136,29 @@ void menu_listener(byte level, byte item){
 
             if(menu_item <= 5){
               m1 = menu_timer[0];
-              m1.concat(" ");
-              m1.concat("00"); // jam
+              //m1.concat(" ");
+              m1.concat(timer_display_data(0,1)); // jam menu 1
               m1.concat(":");
-              m1.concat("00"); // menit
+              m1.concat(timer_display_data(1,2)); // menit menu 2
               m2 = menu_timer[1];
-              m2.concat(" ");
-              m2.concat("00"); // Lagu1
+              //m2.concat(" ");
+              m2.concat(timer_display_data(7,3)); // Lagu1
               m2.concat(",");
-              m2.concat("00"); // Lagu2
+              m2.concat(timer_display_data(20,4)); // Lagu2
               m2.concat(",");
-              m2.concat("00"); // Lagu3
+              m2.concat(timer_display_data(50,5)); // Lagu3
             }else if((menu_item-3) < menu_item_max){
               //m1 = menu_timer[menu_item-2];
               //m2 = menu_timer[menu_item-1];
               m1 = menu_timer[menu_item-5];
               m2 = menu_timer[menu_item-4];
               if((menu_item-5) == 1){
-                m1.concat(" ");
-                m1.concat("00"); // Lagu1
+                //m1.concat(" ");
+                m1.concat(timer_display_data(0,3)); // Lagu1
                 m1.concat(",");
-                m1.concat("00"); // Lagu2
+                m1.concat(timer_display_data(0,4)); // Lagu2
                 m1.concat(",");
-                m1.concat("00"); // Lagu3
+                m1.concat(timer_display_data(0,5)); // Lagu3
               }
             }else{
               m1 = menu_timer[menu_item_max-2];
@@ -1200,6 +1200,21 @@ void load_menu(byte LV, byte LV_MAX, byte LV_ITEM){
     menu_item = LV_ITEM;
     // level naik, item reset
     menu_listener(TETAP, TETAP);
+}
+
+String timer_display_data(byte tmp, byte mi){
+    String str_tmp = "";
+    if(mi == menu_item){
+        str_tmp.concat('(');
+    }
+    if(tmp < 10){
+        str_tmp.concat('0');
+    }
+    str_tmp.concat(tmp);
+    if(mi == menu_item){
+        str_tmp.concat(')');
+    }
+    return str_tmp;
 }
 
 void set_display(String m1, String m2){
