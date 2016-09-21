@@ -445,6 +445,7 @@ unsigned long kedip_limit = 300;
 unsigned long kedip_now = 0;
 unsigned long kedip_last = 0;
 
+boolean timer_edit = false;
 byte tmp_timer_data = 0;
 byte tmp_timer_jam = 0;
 byte tmp_timer_menit = 0;
@@ -559,31 +560,53 @@ void btn_listener() {
                         set_lcd_bl(true);
                       }
                     }
-            
-                    // level tetap, item up;
-                    menu_listener(TETAP, NAIK);
+
+                    if(timer_edit == true){
+                        
+                    }else{
+                        // level tetap, item up
+                        menu_listener(TETAP, NAIK);
+                    }
                     if(debug){
                       Serial.println(" > SET ");
                     }
                     break;
               
                 case BTN_UP:
-                    // level tetap, item up
-                    menu_listener(TETAP, NAIK);
+                    if(timer_edit == true){
+                        
+                    }else{
+                        // level tetap, item up
+                        menu_listener(TETAP, NAIK);
+                    }
                     if(debug){
                       Serial.println(" > UP ");
                     }
                     break;
               
                 case BTN_DOWN:
-                    // level tetap, item down
-                    menu_listener(TETAP, TURUN);
+                    if(timer_edit == true){
+                        
+                    }else{
+                        // level tetap, item down
+                        menu_listener(TETAP, TURUN);
+                    }
                     if(debug){
                       Serial.println(" > DOWN ");
                     }
                     break;
               
                 case BTN_OK:
+                    if(menu_level == MENU_TIMER){
+                        if(menu_item < 6){
+                          if(timer_edit == false){
+                              timer_edit = true;
+                          }else{
+                              timer_edit = false;
+                          }
+                          menu_listener(TETAP, TETAP);
+                        }
+                    }
                     proses_menu();
                     if(debug){
                       Serial.println(" > OK ");
@@ -1136,12 +1159,17 @@ void menu_listener(byte level, byte item){
 
             if(menu_item <= 5){
               m1 = menu_timer[0];
-              //m1.concat(" ");
+              if(timer_edit == false || menu_item > 2){
+                m1.concat(" ");
+              }
               m1.concat(timer_display_data(0,1)); // jam menu 1
               m1.concat(":");
               m1.concat(timer_display_data(1,2)); // menit menu 2
+              
               m2 = menu_timer[1];
-              //m2.concat(" ");
+              if(timer_edit == false || menu_item < 3){
+                m2.concat(" ");
+              }
               m2.concat(timer_display_data(7,3)); // Lagu1
               m2.concat(",");
               m2.concat(timer_display_data(20,4)); // Lagu2
@@ -1153,7 +1181,7 @@ void menu_listener(byte level, byte item){
               m1 = menu_timer[menu_item-5];
               m2 = menu_timer[menu_item-4];
               if((menu_item-5) == 1){
-                //m1.concat(" ");
+                m1.concat(" ");
                 m1.concat(timer_display_data(0,3)); // Lagu1
                 m1.concat(",");
                 m1.concat(timer_display_data(0,4)); // Lagu2
@@ -1173,6 +1201,7 @@ void menu_timeout(){
     menu_timeout_now = millis();
     if(menu_timeout_now - menu_timeout_last >= menu_timeout_limit){
         setting_mode = false;
+        timer_edit = false;
         btn_bef = 0;
     }
 }
@@ -1204,14 +1233,14 @@ void load_menu(byte LV, byte LV_MAX, byte LV_ITEM){
 
 String timer_display_data(byte tmp, byte mi){
     String str_tmp = "";
-    if(mi == menu_item){
+    if(mi == menu_item && timer_edit == true){
         str_tmp.concat('(');
     }
     if(tmp < 10){
         str_tmp.concat('0');
     }
     str_tmp.concat(tmp);
-    if(mi == menu_item){
+    if(mi == menu_item && timer_edit == true){
         str_tmp.concat(')');
     }
     return str_tmp;
